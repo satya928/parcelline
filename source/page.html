@@ -1,0 +1,491 @@
+<title>ParcelLine</title>
+<meta name="description" content="Find any lot in BC, New Brunswick or PEI by its PID or address. See the boundary, official municipality, size, neighbours and directions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap">
+<style>
+/*__LEAFLET_CSS__*/
+:root{
+  --bg:#EEF1EE; --bg-2:#E4E9E5; --panel:#FFFFFF; --ink:#18211E; --ink-2:#4A5752; --ink-3:#6F7C77;
+  --line:#D3DBD6; --line-2:#E5EAE7; --accent:#D9500B; --accent-2:#B8430A; --accent-ink:#FFFFFF;
+  --accent-soft:#FBE7DB; --green:#2F6F5E; --green-soft:#DCEDE6; --amber:#8A5D00; --amber-soft:#FAEFD2;
+  --red:#B42318; --red-soft:#FDE4E1; --blue:#1F5FAD; --blue-soft:#E1ECF8;
+  --plan-bg:#F6F4EC; --plan-line:#B9B39D;
+  --shadow:0 1px 2px rgba(24,33,30,.06),0 8px 28px rgba(24,33,30,.07);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"IBM Plex Sans Condensed","IBM Plex Sans","Arial Narrow",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --hero-lines:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='240' viewBox='0 0 320 240'%3E%3Cg fill='none' stroke='%2318211E' stroke-opacity='.07' stroke-width='1'%3E%3Cpath d='M0 40h120l40 30 160-20M0 110h90l70-40M160 70l20 90h140M90 110l-20 130M180 160l-40 80M0 190h70M250 160v80M250 50l-10 110'/%3E%3C/g%3E%3C/svg%3E");
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1513; --bg-2:#141B18; --panel:#18201D; --ink:#E7EDEA; --ink-2:#AEBBB5; --ink-3:#86938E;
+    --line:#2C3733; --line-2:#222B28; --accent:#FF7A33; --accent-2:#FF9357; --accent-ink:#1A0E06;
+    --accent-soft:#3A2417; --green:#6FC3A6; --green-soft:#17322A; --amber:#E7B64A; --amber-soft:#33290F;
+    --red:#FF8A7E; --red-soft:#3A1916; --blue:#7FB2F0; --blue-soft:#172838;
+    --plan-bg:#1B211E; --plan-line:#4A544F;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.28);
+    --hero-lines:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='240' viewBox='0 0 320 240'%3E%3Cg fill='none' stroke='%23E7EDEA' stroke-opacity='.06' stroke-width='1'%3E%3Cpath d='M0 40h120l40 30 160-20M0 110h90l70-40M160 70l20 90h140M90 110l-20 130M180 160l-40 80M0 190h70M250 160v80M250 50l-10 110'/%3E%3C/g%3E%3C/svg%3E");
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1513; --bg-2:#141B18; --panel:#18201D; --ink:#E7EDEA; --ink-2:#AEBBB5; --ink-3:#86938E;
+  --line:#2C3733; --line-2:#222B28; --accent:#FF7A33; --accent-2:#FF9357; --accent-ink:#1A0E06;
+  --accent-soft:#3A2417; --green:#6FC3A6; --green-soft:#17322A; --amber:#E7B64A; --amber-soft:#33290F;
+  --red:#FF8A7E; --red-soft:#3A1916; --blue:#7FB2F0; --blue-soft:#172838;
+  --plan-bg:#1B211E; --plan-line:#4A544F;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.28);
+  --hero-lines:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='240' viewBox='0 0 320 240'%3E%3Cg fill='none' stroke='%23E7EDEA' stroke-opacity='.06' stroke-width='1'%3E%3Cpath d='M0 40h120l40 30 160-20M0 110h90l70-40M160 70l20 90h140M90 110l-20 130M180 160l-40 80M0 190h70M250 160v80M250 50l-10 110'/%3E%3C/g%3E%3C/svg%3E");
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--blue)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:20px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:1000;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;min-height:60px}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font:700 20px/1 var(--cond);letter-spacing:.01em;white-space:nowrap;background:none;border:0;cursor:pointer;padding:0}
+.logo svg{flex:none}
+.logo b{color:var(--accent);font-weight:700}
+.nav{display:flex;gap:4px;margin-left:auto;align-items:center;flex:none}
+.nav a,.iconbtn{padding:8px 10px;border-radius:7px;font-size:14px;color:var(--ink-2);text-decoration:none;background:none;border:0;cursor:pointer}
+.nav a:hover,.iconbtn:hover{background:var(--bg-2);color:var(--ink)}
+.topsearch{flex:1;max-width:460px;display:flex;gap:6px}
+.topsearch input{flex:1;min-width:0;width:0}
+body[data-view="home"] .topsearch{display:none}
+body[data-view="result"] .nav a{display:none}
+
+/* Inputs & buttons */
+.field{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:11px 13px;min-width:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:9px;padding:11px 18px;font-weight:600;cursor:pointer;background:var(--accent);color:var(--accent-ink);white-space:nowrap;text-decoration:none;font-size:15px}
+.btn:hover{background:var(--accent-2)}
+.btn[disabled]{opacity:.6;cursor:progress}
+.btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--accent)}
+.btn.sm{padding:7px 12px;font-size:13.5px;border-radius:8px}
+
+/* Demo banner */
+.demo{background:var(--amber-soft);color:var(--amber);font-size:13.5px}
+.demo .wrap{padding-block:8px}
+
+/* Hero */
+.hero{background:var(--hero-lines),var(--bg);background-size:320px 240px;border-bottom:1px solid var(--line)}
+.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;padding-block:64px 56px;align-items:center}
+.eyebrow{font:600 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.hero h1{font:700 clamp(34px,5vw,56px)/1.02 var(--cond);letter-spacing:-.01em;margin:14px 0 16px;text-wrap:balance}
+.hero p.sub{font-size:18px;color:var(--ink-2);max-width:52ch;margin:0 0 26px}
+.bigsearch{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:var(--shadow);display:flex;gap:8px;flex-wrap:wrap}
+.bigsearch input{flex:1 1 200px;min-width:0;border:0;background:transparent;font-size:19px;padding:10px 12px;font-family:var(--mono);letter-spacing:.02em}
+.bigsearch input::placeholder{font-family:var(--sans);letter-spacing:0;color:var(--ink-3)}
+.bigsearch input:focus-visible{outline:none}
+.bigsearch:focus-within{border-color:var(--accent)}
+.bigsearch select{border:0;background:var(--bg);border-radius:8px;padding:0 10px;font-size:14px;flex:0 0 140px;min-width:0}
+.bigsearch .btn{padding-inline:22px;font-size:16px}
+.helprow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:14px;font-size:13.5px;color:var(--ink-3)}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 11px;font:500 13px/1.4 var(--mono);cursor:pointer;color:var(--ink-2)}
+.chip:hover{border-color:var(--accent);color:var(--ink)}
+.linkbtn{background:none;border:0;padding:0;color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-size:13.5px}
+.whereis{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--ink-2)}
+.whereis ul{margin:6px 0 0;padding-left:18px}
+
+/* Hero plan card */
+.plan{background:var(--plan-bg);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.plan-head{display:flex;justify-content:space-between;gap:8px;padding:12px 16px;border-bottom:1px dashed var(--plan-line);font:500 12px/1.2 var(--mono);color:var(--ink-2);letter-spacing:.04em}
+.plan svg{display:block;width:100%;height:auto}
+.plan-foot{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px dashed var(--plan-line)}
+.plan-foot div{padding:10px 14px;min-width:0}
+.plan-foot div+div{border-left:1px dashed var(--plan-line)}
+.plan-foot .k{font:600 10.5px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.plan-foot .v{font:600 14px/1.3 var(--sans);margin-top:3px;overflow-wrap:anywhere}
+
+/* Sections */
+section.block{padding-block:64px}
+section.block + section.block{border-top:1px solid var(--line)}
+.block h2{font:700 32px/1.1 var(--cond);margin:0 0 10px;text-wrap:balance}
+.block p.lead{color:var(--ink-2);margin:0 0 28px;max-width:62ch}
+.samples{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.scard{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:left;padding:0;cursor:pointer;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
+.scard:hover{border-color:var(--accent);transform:translateY(-2px)}
+@media (prefers-reduced-motion:reduce){.scard{transition:none}.scard:hover{transform:none}}
+.scard .thumb{background:var(--plan-bg);border-bottom:1px solid var(--line-2);aspect-ratio:16/10;max-width:100%}
+.scard .thumb svg{width:100%;height:100%;display:block}
+.scard .body{padding:14px 16px;display:grid;gap:3px}
+.scard .pid{font:600 17px/1.2 var(--mono)}
+.scard .muni{font-weight:600}
+.scard .meta{font-size:13.5px;color:var(--ink-3)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+.step .n{font:600 13px/1 var(--mono);color:var(--accent);letter-spacing:.06em}
+.step h3{font:700 20px/1.2 var(--cond);margin:10px 0 6px}
+.step p{margin:0;color:var(--ink-2);font-size:15px}
+.cov{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-top:1px solid var(--line-2);vertical-align:top}
+thead th{border-top:0;font:600 11px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);background:var(--panel)}
+td.id{font-family:var(--mono);white-space:nowrap}
+td.num{font-family:var(--mono);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font:600 11px/1 var(--sans);padding:5px 7px;border-radius:5px;letter-spacing:.04em;white-space:nowrap}
+.pill.live{background:var(--green-soft);color:var(--green)}
+.pill.paid{background:var(--amber-soft);color:var(--amber)}
+.pill.none{background:var(--bg-2);color:var(--ink-3)}
+.faq{display:grid;gap:10px;max-width:780px}
+.faq details{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.faq summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--ink-3)}
+.faq details[open] summary::after{content:"–"}
+.faq .a{padding:0 18px 16px;color:var(--ink-2);font-size:15px}
+footer{border-top:1px solid var(--line);padding-block:28px;font-size:13px;color:var(--ink-3)}
+footer .wrap{display:grid;gap:8px}
+
+/* Result view */
+.resultview{display:grid;grid-template-columns:minmax(360px,460px) 1fr;height:calc(100vh - 61px);height:calc(100dvh - 61px)}
+.panel{overflow-y:auto;border-right:1px solid var(--line);background:var(--bg);padding:18px 18px 28px;display:flex;flex-direction:column;gap:14px}
+.mapwrap{position:relative;min-height:340px}
+#map,#gmap{position:absolute;inset:0;background:var(--plan-bg)}
+.back{align-self:flex-start}
+.progress{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:8px;font-size:14px}
+.progress .p{display:flex;gap:10px;align-items:center;color:var(--ink-3)}
+.progress .p.done{color:var(--ink)}
+.progress .p.run{color:var(--ink)}
+.dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center}
+.p.done .dot{background:var(--green);border-color:var(--green)}
+.p.done .dot::after{content:"";width:6px;height:3px;border-left:2px solid var(--panel);border-bottom:2px solid var(--panel);transform:rotate(-45deg) translate(1px,-1px)}
+.p.run .dot{border-color:var(--accent);border-right-color:transparent;animation:spin .8s linear infinite}
+.p.skip .dot{border-style:dashed}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.p.run .dot{animation:none}}
+.msg{font-size:14px;padding:12px 14px;border-radius:10px}
+.msg.warn{background:var(--amber-soft);color:var(--amber)}
+.msg.err{background:var(--red-soft);color:var(--red)}
+.msg.info{background:var(--blue-soft);color:var(--blue)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.rhead{padding:16px 18px 14px;display:grid;gap:8px}
+.rhead .row1{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pidbig{font:600 26px/1.1 var(--mono);letter-spacing:.02em}
+.badge{font:600 11px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;padding:6px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.sentence{margin:0;font-size:16px;color:var(--ink-2);text-wrap:pretty}
+.sentence strong{color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line-2)}
+.tile{padding:12px 14px;min-width:0}
+.tile+.tile{border-left:1px solid var(--line-2)}
+.k{font:600 10.5px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.tile .v{font:600 15px/1.25 var(--sans);margin-top:4px;overflow-wrap:anywhere}
+.tile .s{font-size:12.5px;color:var(--ink-3);margin-top:2px;overflow-wrap:anywhere}
+.official{display:inline-flex;align-items:center;gap:4px;font:600 10.5px/1 var(--sans);color:var(--green);letter-spacing:.04em;margin-top:5px}
+.approx{color:var(--amber)}
+.quick{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px 16px;border-top:1px solid var(--line-2)}
+.tabs{display:flex;border-bottom:1px solid var(--line-2);overflow-x:auto}
+.tabs button{flex:1;border:0;background:none;padding:12px 10px;font-size:14px;font-weight:600;color:var(--ink-3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabpane{padding:14px 18px 18px;display:grid;gap:12px}
+dl.facts{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-2);border:1px solid var(--line-2);border-radius:9px;overflow:hidden}
+dl.facts div{background:var(--panel);padding:9px 12px;min-width:0}
+dl.facts div.wide{grid-column:1/-1}
+dl.facts dt{font:600 10.5px/1.2 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+dl.facts dd{margin:3px 0 0;font-size:14px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+dl.facts dd.mono{font-family:var(--mono);font-size:13px}
+.muted{color:var(--ink-3);font-size:13px}
+.tblwrap{overflow:auto;max-height:320px;border:1px solid var(--line-2);border-radius:9px}
+.tblwrap table{font-size:13px}
+.tblwrap th,.tblwrap td{padding:7px 10px}
+.tblwrap thead th{position:sticky;top:0}
+.visit{display:grid;gap:10px}
+.visit .row{display:flex;gap:8px;flex-wrap:wrap}
+.visit .row > *{min-width:0}
+#svbox{height:230px;border-radius:9px;overflow:hidden;background:var(--bg-2)}
+#routeSteps{max-height:280px;overflow:auto;font-size:13px}
+.list{margin:0;padding:0;list-style:none;font-size:14px}
+.list li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line-2)}
+.list li:first-child{border-top:0}
+.list .t{color:var(--ink-3);font-size:12.5px}
+.pick{list-style:none;margin:0;padding:0}
+.pick li button{width:100%;text-align:left;border:0;border-top:1px solid var(--line-2);background:transparent;padding:12px 18px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.pick li:first-child button{border-top:0}
+.pick li button:hover{background:var(--bg)}
+.pick .m{font-weight:600}
+.pick .s{color:var(--ink-3);font-size:13px}
+.recent{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--ink-3)}
+
+/* Map chrome */
+.mapctl{position:absolute;top:12px;right:12px;z-index:500;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden;box-shadow:var(--shadow)}
+.seg button{border:0;background:transparent;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.legend{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:12.5px;box-shadow:var(--shadow);display:grid;gap:4px}
+.legend span{display:flex;align-items:center;gap:8px}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid}
+.maptip{position:absolute;left:12px;bottom:26px;z-index:500;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:13px;color:var(--ink-2);box-shadow:var(--shadow);max-width:calc(100% - 24px)}
+.leaflet-container{font-family:var(--sans);background:var(--plan-bg)}
+.pid-label{background:var(--accent);color:#fff;border:0;border-radius:5px;font:600 12px/1 var(--mono);padding:5px 7px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.pid-label::before{display:none}
+.edge-host{background:none;border:0}
+.edge-label{display:inline-block;transform:translate(-50%,-50%);background:rgba(24,33,30,.85);color:#fff;border-radius:4px;font:600 11px/1 var(--mono);padding:3px 5px;white-space:nowrap;pointer-events:none}
+
+/* Settings dialog */
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);padding:0;max-width:min(520px,calc(100vw - 32px));width:100%;box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(10,14,12,.45)}
+.dlg{padding:20px;display:grid;gap:10px}
+.dlg h3{margin:0;font:700 22px/1.2 var(--cond)}
+.dlg label{font:600 11px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-top:6px}
+.dlg .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px}
+.dlg p{margin:0;font-size:14px;color:var(--ink-2)}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip2{display:inline-flex;align-items:center;gap:4px;font:600 12px/1 var(--sans);padding:6px 9px;border-radius:999px;background:var(--bg-2);color:var(--ink-2);white-space:nowrap}
+.chip2.green{background:var(--green-soft);color:var(--green)}
+.chip2.warn{background:var(--amber-soft);color:var(--amber)}
+.chip2.wait{background:transparent;border:1px dashed var(--line);color:var(--ink-3);font-weight:500}
+.lsec{display:grid;gap:7px;padding-bottom:12px;border-bottom:1px solid var(--line-2)}
+.lsec:last-child{border-bottom:0;padding-bottom:0}
+.lsec .row{display:flex;flex-wrap:wrap;gap:8px}
+.big{font:700 18px/1.25 var(--cond)}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:14px}
+.checks li{display:flex;gap:10px;align-items:flex-start}
+.checks .ic{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700}
+.checks .ok .ic{background:var(--green-soft);color:var(--green)}
+.checks .flag .ic{background:var(--amber-soft);color:var(--amber)}
+.checks .info .ic{background:var(--blue-soft);color:var(--blue)}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-2);border:1px solid var(--line-2);border-radius:9px;overflow:hidden}
+.stat3 > div{background:var(--panel);padding:10px 12px}
+.stat3 .n{font:700 22px/1.1 var(--cond);font-variant-numeric:tabular-nums}
+.stat3 .n.green{color:var(--green)}
+#t3{gap:14px}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:22px}
+.feat div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.feat h3{font:700 18px/1.2 var(--cond);margin:0 0 6px}
+.feat p{margin:0;color:var(--ink-2);font-size:14.5px}
+[hidden]{display:none!important}
+
+@media (max-width:900px){
+  .hero .wrap{grid-template-columns:1fr;gap:32px;padding-block:40px}
+  .samples,.steps,.feat{grid-template-columns:1fr}
+  .resultview{grid-template-columns:1fr;height:auto}
+  .mapwrap{height:56vh;order:-1}
+  .panel{border-right:0;overflow:visible;padding-inline:16px}
+  .nav a{display:none}
+  .topsearch{max-width:none}
+}
+@media (max-width:520px){
+  .wrap{padding-inline:16px}
+  .tiles{grid-template-columns:1fr}
+  .tile+.tile{border-left:0;border-top:1px solid var(--line-2)}
+  .bigsearch select{flex:1 1 100%;padding:8px 10px}
+  .bigsearch .btn{flex:1 1 100%}
+  body[data-view="result"] .logo span{display:none}
+  .top .wrap{gap:8px}
+  .topsearch .btn{padding-inline:10px}
+  .topsearch{min-width:0}
+  .iconbtn{padding:8px 6px}
+  .bigsearch select{flex:1 1 100%;padding:10px}
+}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <button class="logo" id="home" type="button" aria-label="ParcelLine home">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="6" fill="var(--ink)"/><path d="M6 18 L10 7 L20 9 L18 19 Z" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6" cy="18" r="1.8" fill="var(--panel)"/></svg>
+      <span>Parcel<b>Line</b></span>
+    </button>
+    <form class="topsearch" id="topForm" role="search" autocomplete="off">
+      <label class="sr" for="topQ">PID or address</label>
+      <input class="field" id="topQ" type="text" placeholder="PID or address">
+      <button class="btn sm" type="submit">Search</button>
+    </form>
+    <nav class="nav" aria-label="Sections">
+      <a href="#samples">Samples</a><a href="#how">How it works</a><a href="#features">Features</a><a href="#coverage">Coverage</a><a href="#faq">FAQ</a>
+      <button class="iconbtn" id="openSettings" type="button" aria-label="Map settings" title="Map settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<div class="demo" id="demoBanner" hidden><div class="wrap">Preview mode: these three sample lots are real, captured from the provincial records. Live search of every PID and address works on the hosted site.</div></div>
+
+<!-- ============ HOME ============ -->
+<main id="homeView">
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <div class="eyebrow">Land parcel lookup · Canada</div>
+        <h1>Type a PID. See the land.</h1>
+        <p class="sub">Find any lot in British Columbia, New Brunswick or PEI by its parcel number or street address. See its boundary, official municipality, ownership type, whether it's built on, hazards like floodplains and farmland reserves, and in New Brunswick its assessed value and last sale price.</p>
+        <form class="bigsearch" id="heroForm" role="search" autocomplete="off">
+          <label class="sr" for="heroQ">PID or street address</label>
+          <input id="heroQ" type="text" placeholder="PID like 006-620-256, or an address" autofocus>
+          <label class="sr" for="heroProv">Province</label>
+          <select id="heroProv">
+            <option value="auto">Any province</option>
+            <option value="BC">British Columbia</option>
+            <option value="NB">New Brunswick</option>
+            <option value="PE">Prince Edward Island</option>
+          </select>
+          <button class="btn" type="submit">Find the lot</button>
+        </form>
+        <div class="helprow">
+          <span>Try</span>
+          <button type="button" class="chip" data-sample="BC">006-620-256</button>
+          <button type="button" class="chip" data-sample="NB">75000026</button>
+          <button type="button" class="chip" data-sample="PE">1155506</button>
+          <button type="button" class="linkbtn" id="whereBtn" aria-expanded="false" aria-controls="whereBox">Where do I find my PID?</button>
+        </div>
+        <div class="whereis" id="whereBox" hidden>
+          Your PID is printed on:
+          <ul>
+            <li>your property tax notice or assessment notice (BC Assessment, SNB, PEI Finance)</li>
+            <li>the land title or deed, and your purchase contract</li>
+            <li>real estate listings, often labelled "PID" or "Parcel ID"</li>
+          </ul>
+          No PID handy? Type the street address instead and pick the lot.
+        </div>
+        <div class="recent" id="recent" hidden style="margin-top:14px"></div>
+      </div>
+      <div class="plan" aria-hidden="true">
+        <div class="plan-head"><span>PID 006-620-256</span><span>PLAN VIP1993</span></div>
+        <div id="heroPlan"></div>
+        <div class="plan-foot">
+          <div><div class="k">Municipality</div><div class="v">City of Parksville</div></div>
+          <div><div class="k">Lot size</div><div class="v">0.80 acres</div></div>
+          <div><div class="k">District</div><div class="v">RD of Nanaimo</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="samples">
+    <div class="wrap">
+      <h2>Three real lots to try</h2>
+      <p class="lead">One from each province this site covers. Open any of them to see the full parcel report.</p>
+      <div class="samples" id="sampleCards"></div>
+    </div>
+  </section>
+
+  <section class="block" id="how">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="lead">Everything comes straight from each province's own land records, looked up the moment you search.</p>
+      <div class="steps">
+        <div class="step"><div class="n">STEP 1</div><h3>Enter a PID or address</h3><p>Dashes and spaces are fine. If you only know the address, pick the right lot from the matches.</p></div>
+        <div class="step"><div class="n">STEP 2</div><h3>We check official records</h3><p>The lot's boundary comes from the provincial parcel map. The municipality comes from the government's legal boundary map, not a guess.</p></div>
+        <div class="step"><div class="n">STEP 3</div><h3>See the lot and act on it</h3><p>Read the plain-language summary, check each side's length, look at the neighbouring lots, and get directions to the land.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="features">
+    <div class="wrap">
+      <h2>What you see for every lot</h2>
+      <p class="lead">Each lot's report pulls from a dozen open government datasets at once.</p>
+      <div class="feat">
+        <div><h3>Ownership type</h3><p>Private, Crown, municipal or First Nations land where the province publishes it, plus the official route to the registered owner's name.</p></div>
+        <div><h3>Vacant or built</h3><p>Whether any building or civic address is recorded on the lot. Scan a whole neighbourhood and every undeveloped lot turns green.</p></div>
+        <div><h3>Hazards &amp; rules</h3><p>Agricultural Land Reserve, floodplains, past wildfires, wetlands, nearby reserves and parks, school and fire districts.</p></div>
+        <div><h3>Value &amp; sales</h3><p>In New Brunswick: assessed value, property tax and last sale price, plus vacant-land counts and recent sales for the whole town.</p></div>
+        <div><h3>Exact boundary</h3><p>Every side's length and direction, the neighbouring lots, and the official municipal boundary on the map.</p></div>
+        <div><h3>Getting there</h3><p>Directions, Street View, Google Earth 3D and nearby listings on REALTOR.ca in one click.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="coverage">
+    <div class="wrap">
+      <h2>Where it works</h2>
+      <p class="lead">Every province numbers its land differently. Three publish their parcel maps openly, so they are searchable here today.</p>
+      <div class="cov">
+        <table>
+          <thead><tr><th>Province</th><th>What the number is called</th><th>Looks like</th><th>On ParcelLine</th></tr></thead>
+          <tbody>
+            <tr><td>British Columbia</td><td>PID (Parcel Identifier)</td><td class="id">006-620-256</td><td><span class="pill live">LIVE</span></td></tr>
+            <tr><td>New Brunswick</td><td>PID (Property Identifier)</td><td class="id">75000026</td><td><span class="pill live">LIVE</span></td></tr>
+            <tr><td>Prince Edward Island</td><td>PID (Property Number)</td><td class="id">1155506</td><td><span class="pill live">LIVE</span></td></tr>
+            <tr><td>Nova Scotia</td><td>PID (Parcel Identification Number)</td><td class="id">8 digits</td><td><span class="pill paid">REGISTRY ONLY</span></td></tr>
+            <tr><td>Alberta</td><td>LINC (Land Identification Numeric Code)</td><td class="id">0012 345 678</td><td><span class="pill paid">REGISTRY ONLY</span></td></tr>
+            <tr><td>Saskatchewan</td><td>Surface parcel number</td><td class="id">9 digits</td><td><span class="pill paid">REGISTRY ONLY</span></td></tr>
+            <tr><td>Manitoba</td><td>Title number / roll number</td><td class="id">varies</td><td><span class="pill paid">REGISTRY ONLY</span></td></tr>
+            <tr><td>Ontario</td><td>PIN (Property Identification Number)</td><td class="id">12345-0418</td><td><span class="pill paid">REGISTRY ONLY</span></td></tr>
+            <tr><td>Quebec</td><td>Lot number (cadastre)</td><td class="id">1 234 567</td><td><span class="pill none">PLANNED</span></td></tr>
+            <tr><td>Newfoundland, territories</td><td>No province-wide parcel ID</td><td class="id">–</td><td><span class="pill none">NOT AVAILABLE</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="faq">
+    <div class="wrap">
+      <h2>Questions</h2>
+      <div class="faq">
+        <details><summary>Is a PID the same as a land identification number?</summary><div class="a">Yes. PID is the name BC, New Brunswick, Nova Scotia and PEI use for the number that identifies one parcel of land. Alberta calls it a LINC and Ontario calls it a PIN. The number stays with the land when it is sold. It only changes when the lot is split or merged.</div></details>
+        <details><summary>Is the PID the same as my title number or tax roll number?</summary><div class="a">No. The title number identifies the ownership record and changes on every sale. The assessment roll number is used for property tax. Both often point to the same lot, but ParcelLine searches by PID.</div></details>
+        <details><summary>How accurate is the boundary?</summary><div class="a">Boundaries come from each province's parcel map and are usually within a metre or two. They are not a legal survey. For exact bearings and distances, order the registered survey plan from the land titles office.</div></details>
+        <details><summary>Where does the municipality come from?</summary><div class="a">From the government's legal boundary map: ParcelMap BC and the BC municipal boundary layer, New Brunswick's Local Governance map (local governments, rural districts and regional service commissions), and PEI's municipal zones. If a lot falls outside every municipality, ParcelLine says so and names the district instead.</div></details>
+        <details><summary>Does ParcelLine show who owns the land?</summary><div class="a">No. Owner names are not in the open parcel data. Ownership searches go through each province's land registry, which charges a fee.</div></details>
+        <details><summary>How do you know if a lot is vacant?</summary><div class="a">A lot counts as undeveloped when no building outline and no civic address falls inside it. Buildings come from OpenStreetMap and, in New Brunswick, the province's building survey. Addresses come from the BC Address Geocoder and the New Brunswick and PEI civic address registries. Building maps can miss rural sheds and new construction, so treat "no buildings on record" as a lead to check on the satellite view.</div></details>
+        <details><summary>Can I see how many vacant lots a town has?</summary><div class="a">In New Brunswick, yes. The province publishes every assessment account with its description, so ParcelLine counts vacant land and lists recent sales for the whole town. In BC and PEI, use "Find undeveloped lots here" to scan any neighbourhood on the map.</div></details>
+        <details><summary>My condo PID says "not found". Why?</summary><div class="a">In BC the public map mostly draws whole lots. Individual strata units often are not drawn separately, so their PIDs may not appear. Try the building's street address instead.</div></details>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>Parcel data: ParcelMap BC (Open Government Licence – British Columbia), Service New Brunswick / GeoNB, Government of Prince Edward Island. Addresses: BC Address Geocoder, PEI civic addresses, © OpenStreetMap contributors (Nominatim).</div>
+      <div>Boundaries and measurements are approximate and are not a legal survey. ParcelLine is a demonstration and is not affiliated with any government.</div>
+    </div>
+  </footer>
+</main>
+
+<!-- ============ RESULT ============ -->
+<main id="resultView" class="resultview" hidden>
+  <div class="panel" id="panel">
+    <button class="btn ghost sm back" id="backBtn" type="button">← New search</button>
+    <div id="panelBody"></div>
+  </div>
+  <div class="mapwrap">
+    <div id="map" role="application" aria-label="Parcel map"></div>
+    <div id="gmap" hidden></div>
+    <div class="mapctl">
+      <div class="seg" role="group" aria-label="Map" id="engSeg" hidden>
+        <button type="button" id="engOsm" aria-pressed="true">Standard</button>
+        <button type="button" id="engG" aria-pressed="false">Google 3D</button>
+      </div>
+      <div class="seg" role="group" aria-label="Basemap" id="bmSeg">
+        <button type="button" id="bmStreet" aria-pressed="true">Map</button>
+        <button type="button" id="bmSat" aria-pressed="false">Satellite</button>
+      </div>
+      <button class="btn sm" type="button" id="scanBtn" style="box-shadow:var(--shadow)">Find undeveloped lots here</button>
+      <div class="legend">
+        <span><i style="border-color:var(--accent)"></i>This lot</span>
+        <span><i style="border-color:#C99A06;border-top-style:dashed"></i>Neighbouring lots</span>
+        <span id="lgMuni"><i style="border-color:var(--blue)"></i>Municipal boundary</span>
+        <span><i style="border-color:#2BB673;border-top-width:8px;opacity:.7"></i>No buildings on record</span>
+      </div>
+    </div>
+    <div class="maptip" id="maptip">Click any lot to open it</div>
+  </div>
+</main>
+
+<dialog id="settings">
+  <form class="dlg" method="dialog" id="settingsForm">
+    <h3>Google Maps features</h3>
+    <p>Adds a 3D satellite fly-in, directions inside the page, Street View, elevation and nearby places. Paste a Google Maps JavaScript API key. It is saved only in this browser.</p>
+    <label for="gkey">API key</label>
+    <input class="field" id="gkey" type="password" placeholder="AIza…" spellcheck="false">
+    <label for="gmapid">Map ID (optional)</label>
+    <input class="field" id="gmapid" type="text" placeholder="Needed for Google's boundary outlines" spellcheck="false">
+    <p class="muted">Enable in Google Cloud: Maps JavaScript API, Geocoding, Directions, Elevation and Places API (New). Restrict the key to your website's address.</p>
+    <div class="row">
+      <button class="btn ghost" type="button" id="gforget">Remove key</button>
+      <button class="btn ghost" value="cancel" type="submit">Cancel</button>
+      <button class="btn" type="button" id="gsave">Save and turn on</button>
+    </div>
+  </form>
+</dialog>
