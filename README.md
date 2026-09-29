@@ -1,7 +1,14 @@
 # ParcelLine — PID lookup demo site
 
+Live: https://satya928.github.io/parcelline/
+
 Search any land parcel in **British Columbia, New Brunswick or Prince Edward Island** by PID or street address.
-For each lot it shows the boundary with side lengths, the official municipality, the county or regional district, the lot size, the address, the neighbouring lots, and directions.
+For each lot it shows the boundary with side lengths, the official municipality, the county or regional district, the lot size, the address, the neighbouring lots, and directions. It also shows:
+
+- **Ownership type**: private, Crown, municipal or First Nations (BC); Crown or not (NB). Owner names are not shown, because they come only from the paid land registry.
+- **Built or vacant**: whether any building (OpenStreetMap, GeoNB building survey) or civic address is recorded on the lot, plus a map scan that highlights every undeveloped lot in view.
+- **Hazards and rules**: Agricultural Land Reserve, designated floodplains, past wildfires, parks and reserves (BC); flood hazard areas and Crown land (NB); wetlands and land use (PEI); elevation everywhere.
+- **Value and sales (New Brunswick)**: assessed value, property tax and last sale price from SNB's open assessment data, plus vacant-land counts and recent sales for the whole town.
 
 It is a static site with no server and no database. The visitor's browser asks each province's open-data service directly.
 

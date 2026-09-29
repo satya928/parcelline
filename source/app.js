@@ -649,7 +649,7 @@ async function addressPoints(prov,b){
   return [];
 }
 const PE_INFO={SFD:"Single-family home",MFD:"Multi-family home",SEA:"Seasonal cottage",COM:"Commercial",FRM:"Farm",BRN:"Barn",APT:"Apartment",MOB:"Mobile home",IND:"Industrial",INS:"Institutional",CHU:"Church",GAR:"Garage"};
-function peInfo(code){ const c=String(code||"").trim(); return c?(PE_INFO[c]||c):null; }
+function peInfo(code){ const c=String(code||"").trim(); return c?(PE_INFO[c]||title(c)):null; }
 const PE_LANDUSE={AGR:"Agriculture",FOR:"Forest",RES:"Residential",COM:"Commercial",IND:"Industrial",INT:"Institutional",REC:"Recreation",TRN:"Transportation",URB:"Urban",WET:"Wetland",NON:"No active use",WAT:"Water"};
 
 function devStatus(geom,pid,bpts,apts){
@@ -822,9 +822,15 @@ function areaSummaryHTML(rec){
 async function scanArea(){
   if(DEMO){ showMsg("info","Area scans run on the hosted site."); return; }
   const m=S.engine==="google"&&G.ready?G.map:lmap;
-  let b;
-  if(m===lmap){ if(lmap.getZoom()<15){ showMsg("info","Zoom in to street level (a few blocks across), then scan."); return; } const bb=lmap.getBounds(); b={w:bb.getWest(),e:bb.getEast(),s:bb.getSouth(),n:bb.getNorth()}; }
-  else { if(G.map.getZoom()<15){ showMsg("info","Zoom in to street level, then scan."); return; } const bb=G.map.getBounds(); const ne=bb.getNorthEast(), sw=bb.getSouthWest(); b={w:sw.lng(),e:ne.lng(),s:sw.lat(),n:ne.lat()}; }
+  let b=null;
+  if(m===lmap){ if(lmap.getZoom()>=15){ const bb=lmap.getBounds(); b={w:bb.getWest(),e:bb.getEast(),s:bb.getSouth(),n:bb.getNorth()}; } }
+  else if(G.map.getZoom()>=15&&G.map.getBounds()){ const bb=G.map.getBounds(); const ne=bb.getNorthEast(), sw=bb.getSouthWest(); b={w:sw.lng(),e:ne.lng(),s:sw.lat(),n:ne.lat()}; }
+  if(!b||(b.e-b.w)>0.04){
+    if(!S.rec){ showMsg("info","Zoom in to street level (a few blocks across), then scan."); return; }
+    const c0=S.rec.centroid, dLat=450/111320, dLng=450/(111320*Math.cos(rad(c0.lat)));
+    b={w:c0.lng-dLng,e:c0.lng+dLng,s:c0.lat-dLat,n:c0.lat+dLat};
+    if(m===lmap) lmap.fitBounds([[b.s,b.w],[b.n,b.e]]); else G.map.fitBounds({west:b.w,east:b.e,south:b.s,north:b.n});
+  }
   const c={lat:(b.s+b.n)/2,lng:(b.w+b.e)/2}, prov=provinceAt(c.lat,c.lng);
   if(!prov){ showMsg("warn","Area scans work in BC, New Brunswick and PEI."); return; }
   const out=$("scanOut"); if(out) out.innerHTML='<div class="muted">Scanning lots, buildings and addresses in view…</div>';
@@ -869,6 +875,7 @@ async function nbTownStats(town){
 }
 async function showTownStats(rec){
   const out=$("townOut"); if(!out) return;
+  if(!rec.ins&&rec._insP){ out.innerHTML='<div class="muted">Loading…</div>'; await rec._insP.catch(()=>{}); }
   const town=rec.ins&&rec.ins.value&&rec.ins.value.town; if(!town){ out.innerHTML='<div class="muted">No assessment area found for this lot.</div>'; return; }
   out.innerHTML='<div class="muted">Counting properties in '+esc(town)+'…</div>';
   try{
@@ -911,7 +918,7 @@ async function open(rec,pr){
   render(rec);
   draw(true);
   remember(rec);
-  loadInsights(rec).then(()=>{ if(S.rec===rec) refreshInsights(rec); }).catch(()=>{});
+  rec._insP=loadInsights(rec); rec._insP.then(()=>{ if(S.rec===rec) refreshInsights(rec); }).catch(()=>{});
   try{ const h="#"+rec.prov.toLowerCase()+"-"+digits(rec.pid); if(location.hash!==h) history.pushState(null,"",h); }catch(e){}
   document.title=rec.pidFmt+" · ParcelLine";
 }
@@ -1041,7 +1048,7 @@ function render(rec){
   const dl=$("dlBtn"); if(dl) dl.onclick=()=>download(rec);
   $body().querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>lookupPid(digits(b.dataset.open),rec.prov));
   $("scanBtn2").onclick=scanArea;
-  if($("townBtn")) $("townBtn").onclick=()=>showTownStats(rec);
+  if($("townBtn")) $("townBtn").onclick=()=>showTownStats(S.rec||rec);
   if(rec.ins) refreshInsights(rec);
 }
 function boundaryPane(rec){
