@@ -331,7 +331,7 @@ function ensureLeaflet(){
   lmap=L.map("map",{zoomControl:true,maxZoom:21,zoomSnap:0.25}).setView([50,-95],4);
   LG.edges=L.layerGroup();
   if(!DEMO){
-    street=L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{subdomains:"abcd",maxZoom:21,maxNativeZoom:20,attribution:"© OpenStreetMap contributors © CARTO"}).addTo(lmap);
+    street=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:21,maxNativeZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(lmap);
     sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19,attribution:"Imagery © Esri, Maxar, Earthstar Geographics"});
     satLabels=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{maxZoom:21,maxNativeZoom:19});
     lmap.on("click",e=>identifyAt(e.latlng.lat,e.latlng.lng,lmap.getZoom()));
