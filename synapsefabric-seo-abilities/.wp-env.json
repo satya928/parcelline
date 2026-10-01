@@ -1,0 +1,16 @@
+{
+	"core": null,
+	"phpVersion": "8.2",
+	"plugins": [
+		".",
+		"https://github.com/WordPress/mcp-adapter/releases/latest/download/mcp-adapter.zip"
+	],
+	"config": {
+		"WP_DEBUG": true,
+		"WP_DEBUG_LOG": true,
+		"WP_ENVIRONMENT_TYPE": "local"
+	},
+	"lifecycleScripts": {
+		"afterStart": "bash ./bin/seed-test-content.sh"
+	}
+}

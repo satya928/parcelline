@@ -1,0 +1,16 @@
+{
+	"name": "synapsefabric-seo-abilities",
+	"private": true,
+	"description": "Local dev tooling for the SynapseFabric SEO Abilities WordPress plugin.",
+	"scripts": {
+		"env:start": "wp-env start",
+		"env:stop": "wp-env stop",
+		"env:reset": "wp-env clean all && wp-env start",
+		"seed": "bash ./bin/seed-test-content.sh",
+		"test": "php tests/test-similarity.php",
+		"lint": "composer run lint"
+	},
+	"devDependencies": {
+		"@wordpress/env": "^10.0.0"
+	}
+}
